@@ -1,4 +1,4 @@
-import schedule from '../scheduler/schedule.json';
+import schedule from '../dist/assets/schedule.json';
 
 // Is talkA starting after talkB
 function startingBefore(talkA, talkB) {
