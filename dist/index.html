@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UpSeSy</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body>
+  <section id="upsesy" class="hero is-fullheight is-light">
+    <div class="hero-head" class="has-text-centered">
+      <header class="navbar">
+        <div class="container ml-0">
+          <div id="navbarMenuHeroC" class="navbar-menu">
+            <div class="navbar-start">
+              <div class="navbar-item has-dropdown is-hoverable">
+                <a id="sessionSelector" class="navbar-link" href="#">
+                  Choose Session
+                </a>
+                <div id="sessionList" class="navbar-dropdown is-hidden-mobile is-boxed">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+      <!-- <div class="select">
+        <select id="sessionSelector"></select>
+      </div>
+      <button id="loadSession" class="button">Load Session</button> -->
+    </div>
+    <div class="hero-body">
+      <div class="container has-text-centered">
+        <p id="countdown" class="title is-size-1 is-family-monospace">00:00</p>
+        <p class="subtitle">Currently: <span id="currentSpeaker"></span></p>
+        <p class="subtitle">Next: <span id="nextSpeaker"></span></p>
+      </div>
+    </div>
+    <div class="hero-foot">
+    </div>
+  </section>
+  <script type="text/javascript" src="main.js"></script>
+</body>
+
+</html>
