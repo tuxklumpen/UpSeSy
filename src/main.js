@@ -33,7 +33,7 @@ class Timer {
             document.getElementById("countdown").innerHTML = minutes.padStart(2, '0') + ":" + seconds.padStart(2, '0');
         }
         else {
-            document.getElementById("countdown").innerHTML = now.getHours() + ":" + now.getMinutes();
+            document.getElementById("countdown").innerHTML = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0');
         }
     }
 
@@ -82,7 +82,7 @@ class Talk extends Timer {
     
     prepare() {
         super.prepare();
-        document.getElementById("currentSpeaker").innerHTML = this.description();
+        document.getElementById("currentSpeaker").innerHTML = "Currently: " + this.description();
     }
 
     description() {
@@ -103,10 +103,6 @@ function makeGenericPause(start, end) {
     return new Pause("Session is paused", start, end, true);
 }
 
-function makeEndOfSession(start) {
-    return new Pause("Session has ended", start, null, true);
-}
-
 class Pause extends Timer  {
     constructor(desc, start, end, showclock) {
         super(start, end, showclock);
@@ -115,11 +111,26 @@ class Pause extends Timer  {
 
     prepare() {
         super.prepare();
-        document.getElementById("currentSpeaker").innerHTML = this.description();
+        document.getElementById("currentSpeaker").innerHTML = "Currently: " + this.description();
     }
 
     description() {
         return this.desc;
+    }
+}
+
+class EndOfSession extends Timer {
+    constructor(start) {
+        super(start, null, true);
+    }
+
+    prepare() {
+        super.prepare();
+        document.getElementById("currentSpeaker").innerHTML = this.description();
+    }
+
+    description() {
+        return "Session has ended";
     }
 }
 
@@ -192,7 +203,7 @@ class Session {
                 this.current = makeGenericPause(now, next.start);
         }
         else {
-            this.current = makeEndOfSession(now);
+            this.current = new EndOfSession(now);
         }
     }
 
@@ -205,10 +216,11 @@ class Session {
 
     _displayNext() {
         if(!this._lastTalkRunning()) {
-            document.getElementById("nextSpeaker").innerHTML = this._nextTalk().description();
+            document.getElementById("nextSpeaker").innerHTML = "Next: " + this._nextTalk().description();
         }
         else {
-            document.getElementById("nextSpeaker").innerHTML = "End of session";
+            document.getElementById("nextSpeaker").classList.add("has-text-light");
+            document.getElementById("nextSpeaker").innerHTML = "Next";
         }
     }
 }
