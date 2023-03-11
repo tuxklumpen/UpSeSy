@@ -9,6 +9,10 @@ function myNow() {
     return new Date(Date.now());
 }
 
+function getHoursMinutes(date, padding=2) {
+    return String(date.getHours()).padStart(padding, '0') + ":" + String(date.getMinutes()).padStart(padding, '0')
+}
+
 class Timer {
     constructor(start, end, showclock) {
         this.start = start;
@@ -33,12 +37,16 @@ class Timer {
             document.getElementById("countdown").innerHTML = minutes.padStart(2, '0') + ":" + seconds.padStart(2, '0');
         }
         else {
-            document.getElementById("countdown").innerHTML = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0');
+            document.getElementById("countdown").innerHTML = getHoursMinutes(now);
         }
     }
 
     prepare() {
 
+    }
+
+    startTime() {
+        return String(this.start.getHours())
     }
 
     run(session) {
@@ -62,6 +70,10 @@ class Timer {
 
     description() {
         throw new Error("Not implemented!");
+    }
+
+    nextDescription() {
+        return this.description() + " @ " + getHoursMinutes(this.start);   
     }
 }
 
@@ -216,7 +228,7 @@ class Session {
 
     _displayNext() {
         if(!this._lastTalkRunning()) {
-            document.getElementById("nextSpeaker").innerHTML = "Next: " + this._nextTalk().description();
+            document.getElementById("nextSpeaker").innerHTML = "Next: " + this._nextTalk().nextDescription();
         }
         else {
             document.getElementById("nextSpeaker").classList.add("has-text-light");
