@@ -9,8 +9,8 @@ function myNow() {
     return new Date(Date.now());
 }
 
-function getHoursMinutes(date, padding=2) {
-    return String(date.getHours()).padStart(padding, '0') + ":" + String(date.getMinutes()).padStart(padding, '0')
+function getHoursMinutes(date, padding=2, seperator=":") {
+    return String(date.getHours()).padStart(padding, '0') + seperator + String(date.getMinutes()).padStart(padding, '0')
 }
 
 class Timer {
@@ -173,9 +173,6 @@ class Session {
         this.upcoming = this.upcoming.sort(startingBefore);
         this.past = this.past.sort(startingBefore);
         this.interval = null;
-
-        console.log(this.past);
-        console.log(this.upcoming);
     }
 
     advanceSession() {
@@ -246,12 +243,20 @@ function clearIntervals() {
 
 function loadSession(event) {
     clearIntervals();
+    document.getElementById("currentSpeaker").classList.remove("has-text-light");
+    document.getElementById("nextSpeaker").classList.remove("has-text-light");
     const sessionName = event.currentTarget.value;
     const sessionSelector = document.getElementById("sessionSelector");
     sessionSelector.innerHTML = sessionName;
     const session = new Session(schedule[sessionName], myNow());
     session.runSession();
 }
+
+window.onload = function() {
+    var initClock = setInterval( () => {
+        document.getElementById("countdown").innerHTML = getHoursMinutes(myNow());
+    }, 1000)
+};
 
 const sessionList = document.getElementById("sessionList");
 Object.keys(schedule).forEach( (key) => {
