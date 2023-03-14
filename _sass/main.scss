@@ -26,7 +26,12 @@ $primary-invert: $pink-invert;
 // 4. Import the rest of Bulma
 */
 
-$light: #f5efe0;
+@import "../node_modules/bulma/sass/utilities/initial-variables";
+
+$white-ter: #f5efe0;
+$cyan: #a6ecff;
+$warning: $orange;
+
 $size-1: 23vw;
 $size-2: 14vw;
 $size-3: 3vw;
@@ -34,3 +39,11 @@ $size-4: 2vw;
 $size-4: 1vw;
 
 @import "../node_modules/bulma/bulma";
+
+.is-pause {
+    @extend .is-info;
+}
+
+.is-talk {
+    @extend .is-light;
+}
