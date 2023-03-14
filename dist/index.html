@@ -7,12 +7,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>UpSeSy</title>
   <link rel="stylesheet" href="css/main.css">
+  <!-- The schedule that will be loaded -->
+  <script type="text/javascript" src="assets/schedule.json.js"></script>
 </head>
 
 <body>
-  <section id="upsesy" class="hero is-fullheight is-light">
+  <section id="upsesy" class="hero is-fullheight">
     <div class="hero-head" class="has-text-centered">
-      <header class="navbar">
+      <header class="navbar is-transparent">
         <div class="container ml-0">
           <div id="navbarMenuHeroC" class="navbar-menu">
             <div class="navbar-start">
@@ -23,31 +25,27 @@
                 <a id="sessionSelector" class="navbar-link" href="#">
                   Choose session
                 </a>
-                <div id="sessionList" class="navbar-dropdown is-boxed">
+                <div id="sessionList" class="navbar-dropdown is-boxed has-text-black-bis">
                 </div>
               </div>
             </div>
           </div>
         </div>
       </header>
-      <!-- <div class="select">
-        <select id="sessionSelector"></select>
-      </div>
-      <button id="loadSession" class="button">Load Session</button> -->
     </div>
     <div class="hero-body">
-      <div class="container has-text-centered">
+      <div id="content" class="container has-text-centered">
         <p id="countdown" class="title is-size-1 is-family-monospace">00:00</p>
-        <p class="subtitle is-size-3"><span id="currentSpeaker" class="has-text-light">Currently:</span></p>
+        <p class="subtitle is-size-3"><span id="currentSpeaker">Currently:</span></p>
         <br />
         <br />
-        <p class="subtitle is-size-4"><span id="nextSpeaker" class="has-text-light">Next:</span></p>
+        <p class="subtitle is-size-4"><span id="nextSpeaker">Next:</span></p>
       </div>
     </div>
     <div class="hero-foot">
     </div>
   </section>
-  <script type="text/javascript" src="main.js"></script>
+  <script type="text/javascript" src="lib/main.js"></script>
 </body>
 
 </html>

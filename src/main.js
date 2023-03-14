@@ -1,6 +1,5 @@
-import schedule from '../dist/assets/schedule.json';
+import './schedule.json.js';
 
-// Is talkA starting after talkB
 function startingBefore(talkA, talkB) {
     return talkA.start < talkB.start;
 }
@@ -11,6 +10,17 @@ function myNow() {
 
 function getHoursMinutes(date, padding=2, seperator=":") {
     return String(date.getHours()).padStart(padding, '0') + seperator + String(date.getMinutes()).padStart(padding, '0')
+}
+
+function setClock(now) {
+    document.getElementById("countdown").innerHTML = getHoursMinutes(now);
+}
+
+function setCountdown(remaining) {
+    const minutes = String(Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60)));
+    const seconds = String(Math.floor((remaining % (1000 * 60)) / 1000));
+
+    document.getElementById("countdown").innerHTML = minutes.padStart(2, '0') + ":" + seconds.padStart(2, '0');
 }
 
 class Timer {
@@ -29,20 +39,13 @@ class Timer {
     }
 
     _draw(now, remaining) {
+        // console.log(this);
         if(!this.showclock) {
-            const minutes = String(Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60)));
-            const seconds = String(Math.floor((remaining % (1000 * 60)) / 1000));
-
-            console.log(this);
-            document.getElementById("countdown").innerHTML = minutes.padStart(2, '0') + ":" + seconds.padStart(2, '0');
+            this.update(remaining);
         }
         else {
-            document.getElementById("countdown").innerHTML = getHoursMinutes(now);
+            setClock(now);
         }
-    }
-
-    prepare() {
-
     }
 
     startTime() {
@@ -75,37 +78,119 @@ class Timer {
     nextDescription() {
         return this.description() + " @ " + getHoursMinutes(this.start);   
     }
+
+    prepare() {
+        throw new Error("Implement prepare function");
+    }
+
+    update(remaining) {
+        throw new Error("Implement update function");
+    }
+
+    cleanup() {
+        throw new Error("Implement cleanup function");
+    }
 }
 
-function makeTalk(json) {
+function makeTalk(json, globalJson) {
+    let content = 1000;
+    let questions = 1000;
+    let gracetime = 1000;
+    if(json.lengths) {
+        content = json.lengths.content * content;
+        questions = json.lengths.questions * questions;
+        gracetime = json.lengths.gracetime * gracetime;
+    }
+    else {
+        content = globalJson.content * content;
+        questions = globalJson.questions * questions;
+        gracetime = globalJson.gracetime * gracetime;
+    }
+
     const speaker = json.speaker;
     const start = new Date(json.start);
-    const end = new Date(json.end);
     const showclock = json.showclock;
     
-    return new Talk(speaker, start, end, showclock);
+    const talk = new Talk(speaker, start, content, questions, gracetime, globalJson.warnspeaker * 1000, showclock);
+    console.log(talk);
+    return talk;
 }
 
 class Talk extends Timer {
-    constructor(speaker, start, end, showclock) {
+    static SEG_CONTENT = 0;
+    static SEG_QUESTIONS = 1;
+    static SEG_GRACETIME = 2;
+
+    constructor(speaker, start, content, questions, gracetime, warnspeaker, showclock) {
+        const end = new Date(start.getTime() + (content + questions + gracetime));
         super(start, end, showclock);
         this.speaker = speaker;
+        this.content = content;
+        this.questions = questions;
+        this.gracetime = gracetime;
+        this.warnspeaker = warnspeaker;
+        this.speakerwarned = false;
+        this.talkSegment = 0;
     }
     
-    prepare() {
-        super.prepare();
-        document.getElementById("currentSpeaker").innerHTML = "Currently: " + this.description();
+    remaining(now) {
+        const toEnd = super.remaining(now);
+        this._updateTalkSegment(toEnd);
+        if(this.talkSegment === Talk.SEG_CONTENT) // In content
+            return toEnd - (this.questions + this.gracetime);
+        else if(this.talkSegment === Talk.SEG_QUESTIONS) // In questions
+            return toEnd - this.gracetime;
+        else
+            return toEnd;
     }
 
     description() {
         return this.speaker;
     }
+
+    _updateTalkSegment(remainingToEnd) {
+        if(remainingToEnd > this.questions + this.gracetime)
+            this.talkSegment = Talk.SEG_CONTENT;
+        else if(remainingToEnd > this.gracetime) {
+            this.talkSegment = Talk.SEG_QUESTIONS;
+            if(this.speakerwarned)
+                this._clearWarning()
+        }
+        else
+            this.talkSegment = Talk.SEG_GRACETIME;
+    }
+
+    _clearWarning() {
+        document.getElementById("countdown").classList.remove("has-text-warning");
+        this.speakerwarned = false;
+    }
+
+    prepare() {
+        document.getElementById("currentSpeaker").innerHTML = "Currently: " + this.description();
+        document.getElementById("upsesy").classList.add("is-talk");
+        this.talksegment = this.SEG_CONTENT;
+    }
+
+    update(remaining) {
+        setCountdown(remaining);
+        if(!this.speakerwarned && this.talkSegment == Talk.SEG_CONTENT && remaining < this.warnspeaker) {
+            console.log("WARNING");
+            document.getElementById("countdown").classList.add("has-text-warning");
+            this.speakerwarned = true;
+        }
+    }
+
+    cleanup() {
+        document.getElementById("upsesy").classList.remove("is-talk");
+        this._clearWarning();
+    }
 }
 
-function makePause(json) {
+function makePause(json, globalJson) {
+    const length = (json.lengths ? json.lengths.content : globalJson.content) * 1000;
     const desc = json.speaker;
     const start = new Date(json.start);
-    const end = new Date(json.end);
+    const end = new Date(start.getTime() + length);
     const showclock = json.showclock;
 
     return new Pause(desc, start, end, showclock);
@@ -121,13 +206,20 @@ class Pause extends Timer  {
         this.desc = desc;
     }
 
-    prepare() {
-        super.prepare();
-        document.getElementById("currentSpeaker").innerHTML = "Currently: " + this.description();
-    }
-
     description() {
         return this.desc;
+    }
+
+    prepare() {
+        document.getElementById("currentSpeaker").innerHTML = "Currently: " + this.description();
+        document.getElementById("upsesy").classList.add("is-pause");
+    }
+
+    update(remaining) {
+    }
+
+    cleanup() {
+        document.getElementById("upsesy").classList.remove("is-pause");
     }
 }
 
@@ -136,30 +228,35 @@ class EndOfSession extends Timer {
         super(start, null, true);
     }
 
-    prepare() {
-        super.prepare();
-        document.getElementById("currentSpeaker").innerHTML = this.description();
-    }
-
     description() {
         return "Session has ended";
+    }
+
+    prepare() {
+        document.getElementById("currentSpeaker").innerHTML = this.description();
+        document.getElementById("upsesy").classList.add("is-pause");
+    }    
+
+    update(remaining) {
+    }
+
+    cleanup() {
+        document.getElementById("upsesy").classList.remove("is-pause");
     }
 }
 
 class Session {
-    constructor(json, now) {
+    constructor(sessionJson, globalJson, now) {
         this.upcoming = Array();
         this.past = Array();
 
-        json.thetalks.forEach( (talk) => {
+        sessionJson.thetalks.forEach( (talk) => {
             let thetalk = null;
             if(talk.kind == "regular") {
-                console.log("Making regular talk for ", talk.speaker);
-                thetalk = makeTalk(talk);
+                thetalk = makeTalk(talk, globalJson);
             }
             else if(talk.kind == "pause") {
-                console.log("Adding a pause for ", talk.speaker);
-                thetalk = makePause(talk);
+                thetalk = makePause(talk, globalJson);
             }
             else
                 throw new Error("Do not know this kind of talk ", talk.kind);
@@ -176,10 +273,13 @@ class Session {
     }
 
     advanceSession() {
+        if(this.current)
+            this.current.cleanup();
+
         this._updateCurrentTalk();
-        console.log(this.current);
         this._displayNext();
         this.current.prepare();
+        console.log("Next running ", this.current);
         this.current.run(this);
     }
 
@@ -204,8 +304,6 @@ class Session {
         const now = myNow();
         const next = this._nextTalk();
         if(next) {
-            console.log("next: ", next);
-            console.log("next: ", next.isrunning(now));
             if(next.isrunning(now))
                 this.current = this.upcoming.pop();
             else
@@ -228,7 +326,7 @@ class Session {
             document.getElementById("nextSpeaker").innerHTML = "Next: " + this._nextTalk().nextDescription();
         }
         else {
-            document.getElementById("nextSpeaker").classList.add("has-text-light");
+            document.getElementById("nextSpeaker").classList.add("has-text-info");
             document.getElementById("nextSpeaker").innerHTML = "Next";
         }
     }
@@ -248,22 +346,24 @@ function loadSession(event) {
     const sessionName = event.currentTarget.value;
     const sessionSelector = document.getElementById("sessionSelector");
     sessionSelector.innerHTML = sessionName;
-    const session = new Session(schedule[sessionName], myNow());
+    const session = new Session(schedule["sessions"][sessionName], schedule["global"], myNow());
     session.runSession();
 }
 
 window.onload = function() {
+    setClock(myNow());
     var initClock = setInterval( () => {
-        document.getElementById("countdown").innerHTML = getHoursMinutes(myNow());
+        setClock(myNow());
     }, 1000)
-};
 
-const sessionList = document.getElementById("sessionList");
-Object.keys(schedule).forEach( (key) => {
-    const el = document.createElement("a");
-    el.classList.add("navbar-item");
-    el.innerHTML = key;
-    el.value = key;
-    el.addEventListener("click", loadSession)
-    sessionList.appendChild(el);
-});
+    const sessionList = document.getElementById("sessionList");
+    schedule = JSON.parse(schedule);
+    Object.keys(schedule["sessions"]).forEach( (key) => {
+        const el = document.createElement("a");
+        el.classList.add("navbar-item");
+        el.innerHTML = key;
+        el.value = key;
+        el.addEventListener("click", loadSession)
+        sessionList.appendChild(el);
+    });
+}
